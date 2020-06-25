@@ -2,8 +2,9 @@
   (:gen-class)
   (:require [clojeria.game :as cg]))
 
-(def players
-  (-> (cg/add-player "Kristie" 4 33)
+(def game
+  (-> (cg/init-game)
+      (cg/add-player "Kristie" 4 33)
       (cg/add-player "Naidu" 4 18)
       (cg/add-player "Blanca" 8 55)
       (cg/add-player "Anna" 6 85)
