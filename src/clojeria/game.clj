@@ -54,7 +54,7 @@
   "Charge a player by taking some money from their bank."
   [player]
   (let [ctp (round-cost player)]
-    (update-in player :bank - ctp)))
+    (update player :bank - ctp)))
 
 (defn apply-all-vals
   "Apply a function to all values in a map."
