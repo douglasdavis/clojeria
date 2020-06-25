@@ -1,8 +1,9 @@
 (ns clojeria.game
+  (:gen-class)
   (:require [clojure.string :as str]))
 
-(def cost-per-card 0.25)
 (defrecord Player [name cards bank])
+(def cost-per-card 0.25)
 (def special-pot (atom 0.0))
 
 (defn pkey
@@ -19,12 +20,6 @@
   ([existing pname cards bank]
    (let [k (pkey pname)]
      (conj existing {k (->Player pname cards bank)}))))
-
-(def players
-  (-> (add-player "Kristie" 4 33)
-      (add-player "Naidu" 4 18)
-      (add-player "Blanca" 8 55)
-      (add-player "Juan" 0 23)))
 
 (defn change-cards
   "Update the cards of a player in the game."
@@ -68,11 +63,18 @@
 (defn single-round-pot
   "Calculate the value of a single round."
   [players]
-  (* (reduce + 0.0 (map #(* 2 (:cards %) cost-per-card) (vals players))) 0.5))
+  (* 0.5
+     (reduce + 0.0
+             (map #(* 2 (:cards %) cost-per-card)
+                  (vals players)))))
 
-(defn empty-special
+(defn empty-special-pot
   []
   (first (reset-vals! special-pot 0.0)))
+
+(defn set-special-pot
+  [val]
+  (first (reset-vals! special-pot val)))
 
 (defn regular-win
   [players winner]
@@ -86,12 +88,12 @@
 (defn regular-win-with-special
   [players winner]
   (let [pot (+ (single-round-pot players)
-               (empty-special))]
+               (empty-special-pot))]
     (-> players
-        (charge-players)
+        (charge-all)
         (give-winnings winner pot))))
 
 (defn special-win
   [players winner]
-  (let [pot (empty-special)]
+  (let [pot (empty-special-pot)]
     (give-winnings players winner pot)))
