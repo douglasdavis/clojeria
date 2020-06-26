@@ -11,14 +11,24 @@
                             (g/add-player "Guelita" 4 99)
                             (g/add-player "Naidu" 4 39))]))
 
+(defn ch-cards [player cards]
+  (swap! game-states conj (g/change-cards (last @game-states) player cards))
+  (last @game-states))
+
 (defn reg-win [winner]
-  (swap! game-states conj (g/regular-win (last @game-states) winner)))
+  (swap! game-states conj (g/regular-win (last @game-states) winner))
+  (last @game-states))
 
 (defn reg-win-with-spec [winner]
-  (swap! game-states conj (g/regular-win-with-special (last @game-states) winner)))
+  (swap! game-states conj (g/regular-win-with-special (last @game-states) winner))
+  (last @game-states))
 
 (defn spec-win [winner]
-  (swap! game-states conj (g/special-win (last @game-states) winner)))
+  (swap! game-states conj (g/special-win (last @game-states) winner))
+  (last @game-states))
+
+(defn latest []
+  (last @game-states))
 
 (reg-win "Kristie")
 (reg-win "Kristie")
