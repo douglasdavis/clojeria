@@ -80,35 +80,70 @@
    (set-special-pot game 0.0)))
 
 (defn regular-win
-  "Award the WINNER in GAME with a regular round prize."
-  [game winner]
-  (let [pot (single-round-pot game)
-        k (pkey winner)]
-    (-> game
-        (charge-all)
-        (give-winnings k pot)
-        (update-in [:players k :wins] inc)
-        (update-in [:special-pot] + pot))))
+  "Award the WINNER(S) in GAME with a regular round prize."
+  ([game winner]
+   (let [pot (single-round-pot game)]
+     (-> game
+         (charge-all)
+         (regular-win winner pot true)
+         (update-in [:special-pot] + pot))))
+  ([game winner1 winner2]
+   (let [k1 (pkey winner1)
+         k2 (pkey winner2)
+         pot (* 0.5 (single-round-pot game))]
+     (-> game
+         (charge-all)
+         (regular-win k1 pot true)
+         (regular-win k2 pot true)
+         (update-in [:special-pot] + (* 2.0 pot)))))
+  ([game winner pot garbage]
+   (let [k (pkey winner)]
+     (-> game
+         (give-winnings k pot)
+         (update-in [:players k :wins] inc)))))
 
 (defn regular-win-with-special
-  "Award the WINNER in GAME with a regular round prize which includes
+  "Award the WINNER(S) in GAME with a regular round prize which includes
   the special pot."
-  [game winner]
-  (let [pot (+ (single-round-pot game) (:special-pot game))
-        k (pkey winner)]
-    (-> game
-        (charge-all)
-        (give-winnings k pot)
-        (update-in [:players k :wins] inc)
-        (update-in [:players k :sp-wins] inc)
-        (assoc :special-pot 0.0))))
+  ([game winner]
+   (let [pot (+ (* 2 (single-round-pot game)) (:special-pot game))]
+     (-> game
+         (charge-all)
+         (regular-win-with-special winner pot true)
+         (assoc :special-pot 0.0))))
+  ([game winner1 winner2]
+   (let [k1 (pkey winner1)
+         k2 (pkey winner2)
+         pot (* 0.5 (+ (* 2 (single-round-pot game)) (:special-pot game)))]
+     (-> game
+         (charge-all)
+         (regular-win-with-special k1 pot true)
+         (regular-win-with-special k2 pot true)
+         (assoc :special-pot 0.0))))
+  ([game winner pot garbage]
+   (let [k (pkey winner)]
+     (-> game
+         (give-winnings k pot)
+         (update-in [:players k :wins] inc)
+         (update-in [:players k :sp-wins] inc)))))
 
 (defn special-win
   "Award the WINNER in GAME with the special pot."
-  [game winner]
-  (let [pot (:special-pot game)
-        k (pkey winner)]
-    (-> game
-        (give-winnings k pot)
-        (update-in [:players k :sp-wins] inc)
-        (assoc :special-pot 0.0))))
+  ([game winner]
+   (let [pot (:special-pot game)]
+     (-> game
+         (special-win game winner true)
+         (assoc :special-pot 0.0))))
+  ([game winner1 winner2]
+   (let [k1 (pkey winner1)
+         k2 (pkey winner2)
+         pot (* 0.5 (:special-pot game))]
+     (-> game
+         (special-win k1 pot true)
+         (special-win k2 pot true)
+         (assoc :special-pot 0.0))))
+  ([game winner pot garbage]
+   (let [k (pkey winner)]
+     (-> game
+         (give-winnings k pot)
+         (update-in [:players k :sp-wins] inc)))))
