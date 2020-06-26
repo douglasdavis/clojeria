@@ -10,7 +10,7 @@
   [p]
   (keyword (str/lower-case (name p))))
 
-(defn init-game
+(defn init
   "Initialize a game."
   []
   {:players {} :special-pot 0.0})
@@ -132,7 +132,7 @@
   ([game winner]
    (let [pot (:special-pot game)]
      (-> game
-         (special-win game winner true)
+         (special-win winner pot true)
          (assoc :special-pot 0.0))))
   ([game winner1 winner2]
    (let [k1 (pkey winner1)
