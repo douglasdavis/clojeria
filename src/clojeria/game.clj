@@ -1,5 +1,7 @@
 (ns clojeria.game
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [clojure.java.io :as io]
+            [clojure.data.csv :as csv]))
 
 (defrecord Player [name cards bank wins sp-wins])
 (def cost-per-card 0.25)
@@ -12,17 +14,16 @@
 
 (defn init
   "Initialize a game."
-  []
-  {:players {} :special-pot 0.0})
+  ([]
+   {:players {} :special-pot 0.0})
+  ([players]
+   {:players players :special-pot 0.0}))
 
 (defn add-player
   "Add a player to game."
-  ([pname cards bank]
-   (let [k (pkey pname)]
-     {k (->Player pname cards bank 0 0)}))
   ([existing pname cards bank]
    (let [k (pkey pname)]
-     (update existing :players conj (add-player pname cards bank)))))
+     (update existing :players conj {k (->Player pname cards bank 0 0)}))))
 
 (defn change-cards
   "Update the cards of a player in the game."
@@ -38,9 +39,14 @@
 
 (defn give-winnings
   "Award some winnings to a player."
-  [game player pot]
-  (let [k (pkey player)]
-    (update-in game [:players k :bank] + pot)))
+  ([game player pot]
+   (let [k (pkey player)]
+     (update-in game [:players k :bank] + pot)))
+  ([game player pot wtype]
+   (let [k (pkey player)]
+     (-> game
+         (update-in [:players k :bank] + pot)
+         (update-in [:players k wtype] inc)))))
 
 (defn round-cost
   "Calculate the cost for a player to play a round."
@@ -147,3 +153,44 @@
      (-> game
          (give-winnings k pot)
          (update-in [:players k :sp-wins] inc)))))
+
+(defn- csv-data->maps [csv-data]
+  (map
+   zipmap
+   (->> (first csv-data)
+        (map keyword)
+        repeat)
+   (rest csv-data)))
+
+(defn- players-from-csv [csv-file]
+  (with-open [reader (io/reader csv-file)]
+    (doall
+     (->> (csv/read-csv reader)
+          csv-data->maps
+          (map (fn [rec]
+                 (-> rec
+                     (update :cards #(Long/parseLong %))
+                     (update :bank #(Float/parseFloat %)))))))))
+
+(defn game-from-csv
+  "Initialize a game from a CSV file."
+  [csv-file]
+  (init
+   (into
+    {}
+    (for [entry (players-from-csv csv-file)]
+      [(pkey (:name entry))
+       {:name (:name entry)
+        :cards (:cards entry)
+        :bank (:bank entry)
+        :wins 0
+        :sp-wins 0}]))))
+
+(defn calculate-bank-differences
+  "Calculate the bank differences between two game maps."
+  [final initial]
+  (into
+   {}
+   (for [k (keys (:players final))]
+     [k (- (get-in final [:players k :bank])
+           (get-in initial [:players k :bank]))])))
