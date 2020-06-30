@@ -62,6 +62,12 @@
   (let [ctp (round-cost player)]
     (update player :bank - ctp)))
 
+(defn charge-llena
+  "Charge a player by taking some money from their bank."
+  [player]
+  (let [ctp (* 2 (round-cost player))]
+    (update player :bank - ctp)))
+
 (defn apply-all-vals
   "Apply a function to all values in a map."
   [coll f & args]
@@ -71,6 +77,11 @@
   "Charge all players the amount they owe to play their cards."
   [game]
   (update game :players apply-all-vals charge))
+
+(defn charge-all-llena
+  "Charge all players the amount they owe to play their cards."
+  [game]
+  (update game :players apply-all-vals charge-llena))
 
 (defn single-round-pot
   "Calculate the value of a single round."
@@ -154,6 +165,14 @@
          (give-winnings k pot)
          (update-in [:players k :sp-wins] inc)))))
 
+(defn llena-win
+  [game winner]
+  (let [k (pkey winner)
+        pot (* 4.0 (single-round-pot game))]
+    (-> game
+        (charge-all-llena)
+        (give-winnings k pot))))
+
 (defn- csv-data->maps [csv-data]
   (map
    zipmap
@@ -172,7 +191,7 @@
                      (update :cards #(Long/parseLong %))
                      (update :bank #(Float/parseFloat %)))))))))
 
-(defn game-from-csv
+(defn init-from-csv
   "Initialize a game from a CSV file."
   [csv-file]
   (init
@@ -194,3 +213,10 @@
    (for [k (keys (:players final))]
      [k (- (get-in final [:players k :bank])
            (get-in initial [:players k :bank]))])))
+
+(defn summary-of-column
+  [game c]
+  (into
+   {}
+   (for [k (keys (:players  game))]
+     [k (get-in game [:players k c])])))
