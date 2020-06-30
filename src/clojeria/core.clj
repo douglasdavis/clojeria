@@ -4,7 +4,7 @@
 
 (def game-states (atom []))
 
-(swap! game-states conj (g/init-from-csv "/Users/ddavis/Dropbox/kdshare/Loteria/Loteria_Accounts_06272020.csv"))
+(swap! game-states conj (g/init-from-csv "/home/ddavis/software/clj/clojeria/resources/playertable.csv"))
 
 (defn ch-cards [player cards]
   (swap! game-states conj (g/change-cards (last @game-states) player cards))
