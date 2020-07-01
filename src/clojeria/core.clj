@@ -2,68 +2,85 @@
   (:gen-class)
   (:require [clojeria.game :as g]))
 
-(def game-states (atom []))
+(def history (atom []))
 
-(swap! game-states conj (g/init-from-csv "/home/ddavis/software/clj/clojeria/resources/playertable.csv"))
+(swap! history conj (g/init-from-csv "/Users/ddavis/Dropbox/kdshare/Loteria/Loteria_Accounts_06302020.csv"))
 
 (defn ch-cards [player cards]
-  (swap! game-states conj (g/change-cards (last @game-states) player cards))
-  (last @game-states))
+  (swap! history conj (g/change-cards (last @history) player cards))
+  (last @history))
 
-(defn reg-win
+(defn r-win
   ([winner]
-   (swap! game-states conj (g/regular-win (last @game-states) winner))
-   (last @game-states))
+   (swap! history conj (g/regular-win (last @history) winner))
+   (last @history))
   ([winner1 winner2]
-   (swap! game-states conj (g/regular-win (last @game-states) winner1 winner2))
-   (last @game-states)))
+   (swap! history conj (g/regular-win (last @history) winner1 winner2))
+   (last @history)))
 
-(defn reg-win-with-spec [winner]
-  (swap! game-states conj (g/regular-win-with-special (last @game-states) winner))
-  (last @game-states))
+(defn rs-win [winner]
+  (swap! history conj (g/regular-win-with-special (last @history) winner))
+  (last @history))
 
-(defn spec-win [winner]
-  (swap! game-states conj (g/special-win (last @game-states) winner))
-  (last @game-states))
+(defn s-win
+  ([winner]
+  (swap! history conj (g/special-win (last @history) winner))
+   (last @history))
+  ([winner1 winner2]
+   (swap! history conj (g/special-win  (last @history) winner1 winner2))
+   (last @history)))
 
-(defn llena [winner]
-  (swap! game-states conj (g/llena-win (last @game-states) winner))
-  (last @game-states))
+(defn l-win [winner]
+  (swap! history conj (g/llena-win (last @history) winner))
+  (last @history))
 
 (defn undo []
-  (swap! game-states drop-last)
-  (last @game-states))
+  (swap! history drop-last)
+  (last @history))
 
 (defn latest []
-  (last @game-states))
+  (last @history))
 
 (defn start []
-  (first @game-states))
+  (first @history))
 
-(ch-cards "guelita" 4)
-(reg-win-with-spec "kristie")
-(reg-win "kristie" "blanca")
-(spec-win "Blanca")
-(reg-win "Kristie")
-(reg-win "Blanca")
-(reg-win "Anna")
-(reg-win "Alma")
-(spec-win "Anna")
-(reg-win "guelita")
-(reg-win "Alma")
-(reg-win-with-spec "Stephanie")
-(reg-win "Anna")
-(reg-win "Alma")
-(reg-win "Blanca")
-(reg-win "Naidu")
-(spec-win "alma")
-(ch-cards "guelito" 4)
-(reg-win-with-spec "Blanca")
-(reg-win "Guelito")
-(reg-win "Blanca")
-(reg-win "Anna")
-(reg-win "Anna")
-(spec-win "Guelita")
-(reg-win "Guelita")
-(reg-win-with-spec "Naidu")
-(llena "Alma")
+(defn diffs []
+  (g/calculate-bank-differences (latest) (start)))
+
+(defn banks []
+  (g/summary-of-column (latest) :bank))
+
+(defn cards []
+  (g/summary-of-column (latest) :cards))
+
+(defn spot []
+  (:special-pot (latest)))
+
+(r-win "Kristie")
+(s-win "Kristie")
+(r-win "Blanca")
+(r-win "Blanca")
+(r-win "Naidu")
+(s-win "Naidu" "Blanca")
+(r-win "Anna")
+(s-win "Anna")
+(r-win "Blanca")
+(r-win "Blanca")
+(r-win "Anna")
+(r-win "Guelita")
+(s-win "Stephanie")
+(r-win "Jenny")
+(r-win "Blanca")
+(r-win "Kristie")
+(r-win "Kristie")
+(s-win "Anna")
+(r-win "Anna")
+(r-win "Jenny")
+(s-win "Jenny" "Anna")
+(ch-cards "Guelito" 4)
+(r-win "Jenny")
+(r-win "Kristie")
+(r-win "Jenny")
+(r-win "Guelita")
+(r-win "Blanca")
+(s-win "Naidu")
