@@ -3,7 +3,7 @@
             [clojure.java.io :as io]
             [clojure.data.csv :as csv]))
 
-(defrecord Player [name cards bank wins sp-wins])
+(defrecord Player [name cards bank wins sp-wins llena-wins])
 (def cost-per-card 0.25)
 
 (defn pkey
@@ -37,17 +37,6 @@
   (let [k (pkey player)]
     (assoc-in game [:players k :bank] new-bank)))
 
-(defn give-winnings
-  "Award some winnings to a player."
-  ([game player pot]
-   (let [k (pkey player)]
-     (update-in game [:players k :bank] + pot)))
-  ([game player pot wtype]
-   (let [k (pkey player)]
-     (-> game
-         (update-in [:players k :bank] + pot)
-         (update-in [:players k wtype] inc)))))
-
 (defn round-cost
   "Calculate the cost for a player to play a round."
   ([player]
@@ -56,32 +45,10 @@
    (let [k (pkey player)]
      (round-cost (get-in game [:players k])))))
 
-(defn charge
-  "Charge a player by taking some money from their bank."
-  [player]
-  (let [ctp (round-cost player)]
-    (update player :bank - ctp)))
-
-(defn charge-llena
-  "Charge a player by taking some money from their bank."
-  [player]
-  (let [ctp (* 2 (round-cost player))]
-    (update player :bank - ctp)))
-
-(defn apply-all-vals
+(defn- apply-all-vals
   "Apply a function to all values in a map."
   [coll f & args]
   (into {} (for [[k v] coll] [k (apply f v args)])))
-
-(defn charge-all
-  "Charge all players the amount they owe to play their cards."
-  [game]
-  (update game :players apply-all-vals charge))
-
-(defn charge-all-llena
-  "Charge all players the amount they owe to play their cards."
-  [game]
-  (update game :players apply-all-vals charge-llena))
 
 (defn single-round-pot
   "Calculate the value of a single round."
@@ -90,88 +57,122 @@
           (map #(* (:cards %) cost-per-card)
                (vals (:players game)))))
 
+(defn charge
+  "Charge a player by taking some money from their bank."
+  [player]
+  (let [ctp (round-cost player)]
+    (update player :bank - ctp)))
+
+(defn charge-all
+  "Charge all players the amount they owe to play their cards."
+  [game]
+  (-> game
+      (update :players apply-all-vals charge)
+      (update :special-pot + (single-round-pot game))))
+
+(defn charge-llena
+  "Charge a player by taking some money from their bank."
+  [player]
+  (let [ctp (:cards player)]
+    (update player :bank - ctp)))
+
+(defn charge-all-llena
+  "Charge all players the amount they owe to play their cards."
+  [game]
+  (update game :players apply-all-vals charge-llena))
+
 (defn set-special-pot
   ([game val]
    (assoc game :special-pot val))
   ([game]
    (set-special-pot game 0.0)))
 
+(defn give-winnings
+  "Award some winnings to a player."
+  [game player pot wtype]
+  (let [k (pkey player)]
+    (-> game
+        (update-in [:players k :bank] + pot)
+        (update-in [:players k wtype] inc))))
+
 (defn regular-win
   "Award the WINNER(S) in GAME with a regular round prize."
-  ([game winner]
-   (let [pot (single-round-pot game)]
+  ([game w1]
+   (let [k1 (pkey w1)
+         pot (single-round-pot game)]
      (-> game
          (charge-all)
-         (regular-win winner pot true)
-         (update-in [:special-pot] + pot))))
-  ([game winner1 winner2]
-   (let [k1 (pkey winner1)
-         k2 (pkey winner2)
+         (give-winnings k1 pot :wins))))
+  ([game w1 w2]
+   (let [k1 (pkey w1)
+         k2 (pkey w2)
          pot (* 0.5 (single-round-pot game))]
      (-> game
          (charge-all)
-         (regular-win k1 pot true)
-         (regular-win k2 pot true)
-         (update-in [:special-pot] + (* 2.0 pot)))))
-  ([game winner pot garbage]
-   (let [k (pkey winner)]
-     (-> game
-         (give-winnings k pot)
-         (update-in [:players k :wins] inc)))))
-
-(defn regular-win-with-special
-  "Award the WINNER(S) in GAME with a regular round prize which includes
-  the special pot."
-  ([game winner]
-   (let [pot (+ (* 2 (single-round-pot game)) (:special-pot game))]
-     (-> game
-         (charge-all)
-         (regular-win-with-special winner pot true)
-         (assoc :special-pot 0.0))))
-  ([game winner1 winner2]
-   (let [k1 (pkey winner1)
-         k2 (pkey winner2)
-         pot (* 0.5 (+ (* 2 (single-round-pot game)) (:special-pot game)))]
-     (-> game
-         (charge-all)
-         (regular-win-with-special k1 pot true)
-         (regular-win-with-special k2 pot true)
-         (assoc :special-pot 0.0))))
-  ([game winner pot garbage]
-   (let [k (pkey winner)]
-     (-> game
-         (give-winnings k pot)
-         (update-in [:players k :wins] inc)
-         (update-in [:players k :sp-wins] inc)))))
+         (give-winnings k1 pot :wins)
+         (give-winnings k2 pot :wins))))
+  ([game w1 w2 w3]
+   (let [k1 (pkey w1)
+         k2 (pkey w2)
+         k3 (pkey w3)
+         pot (/ (single-round-pot game) 3.0)]
+     (charge-all)
+     (give-winnings k1 pot :wins)
+     (give-winnings k2 pot :wins)
+     (give-winnings k3 pot :wins))))
 
 (defn special-win
-  "Award the WINNER in GAME with the special pot."
-  ([game winner]
-   (let [pot (:special-pot game)]
+  "Award special pot to a player."
+  ([game w1]
+   (let [k1 (pkey w1)
+         pot (:special-pot game)]
      (-> game
-         (special-win winner pot true)
+         (give-winnings k1 pot :sp-wins)
          (assoc :special-pot 0.0))))
-  ([game winner1 winner2]
-   (let [k1 (pkey winner1)
-         k2 (pkey winner2)
+  ([game w1 w2]
+   (let [k1 (pkey w1)
+         k2 (pkey w2)
          pot (* 0.5 (:special-pot game))]
      (-> game
-         (special-win k1 pot true)
-         (special-win k2 pot true)
+         (give-winnings k1 pot :sp-wins)
+         (give-winnings k2 pot :sp-wins)
          (assoc :special-pot 0.0))))
-  ([game winner pot garbage]
-   (let [k (pkey winner)]
+  ([game w1 w2 w3]
+   (let [k1 (pkey w1)
+         k2 (pkey w2)
+         k3 (pkey w3)
+         pot (/ (:special-pot game) 3.0)]
      (-> game
-         (give-winnings k pot)
-         (update-in [:players k :sp-wins] inc)))))
+         (give-winnings k1 pot :sp-wins)
+         (give-winnings k2 pot :sp-wins)
+         (give-winnings k3 pot :sp-wins)
+         (assoc :special-pot 0.0)))))
 
 (defn llena-win
-  [game winner]
-  (let [k (pkey winner)
-        pot (* 4.0 (single-round-pot game))]
-    (-> game
-        (charge-all-llena)
-        (give-winnings k pot))))
+  ([game w1]
+   (let [k1 (pkey w1)
+         pot (* 4.0 (single-round-pot game))]
+     (-> game
+         (charge-all-llena)
+         (give-winnings k1 pot :llena-wins))))
+  ([game w1 w2]
+   (let [k1 (pkey w1)
+         k2 (pkey w2)
+         pot (* 0.5 (* 4.0 (single-round-pot game)))]
+     (-> game
+         (charge-all-llena)
+         (give-winnings k1 pot :llena-wins)
+         (give-winnings k2 pot :llena-wins))))
+  ([game w1 w2 w3]
+   (let [k1 (pkey w1)
+         k2 (pkey w2)
+         k3 (pkey w3)
+         pot (/ (* 4.0 (single-round-pot game)) 3.0)]
+     (-> game
+         (charge-all-llena)
+         (give-winnings k1 pot :llena-wins)
+         (give-winnings k2 pot :llena-wins)
+         (give-winnings k3 pot :llena-wins)))))
 
 (defn- csv-data->maps [csv-data]
   (map
@@ -203,7 +204,8 @@
         :cards (:cards entry)
         :bank (:bank entry)
         :wins 0
-        :sp-wins 0}]))))
+        :sp-wins 0
+        :llena-wins 0}]))))
 
 (defn calculate-bank-differences
   "Calculate the bank differences between two game maps."

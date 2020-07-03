@@ -4,45 +4,54 @@
 
 (def history (atom []))
 
-(swap! history conj (g/init-from-csv "/Users/ddavis/Dropbox/kdshare/Loteria/Loteria_Accounts_06302020.csv"))
-
-(defn ch-cards [player cards]
-  (swap! history conj (g/change-cards (last @history) player cards))
-  (last @history))
-
-(defn r-win
-  ([winner]
-   (swap! history conj (g/regular-win (last @history) winner))
-   (last @history))
-  ([winner1 winner2]
-   (swap! history conj (g/regular-win (last @history) winner1 winner2))
-   (last @history)))
-
-(defn rs-win [winner]
-  (swap! history conj (g/regular-win-with-special (last @history) winner))
-  (last @history))
-
-(defn s-win
-  ([winner]
-  (swap! history conj (g/special-win (last @history) winner))
-   (last @history))
-  ([winner1 winner2]
-   (swap! history conj (g/special-win  (last @history) winner1 winner2))
-   (last @history)))
-
-(defn l-win [winner]
-  (swap! history conj (g/llena-win (last @history) winner))
-  (last @history))
-
-(defn undo []
-  (swap! history drop-last)
-  (last @history))
+(swap! history conj (g/init-from-csv "/Users/ddavis/Dropbox/kdshare/Loteria/Loteria_Accounts_06302020.csv")
 
 (defn latest []
   (last @history))
 
+(defn undo []
+  (swap! history drop-last)
+  (latest))
+
 (defn start []
   (first @history))
+
+(defn ch-cards [player cards]
+  (swap! history conj (g/change-cards (latest) player cards))
+  (latest))
+
+(defn r-win
+  ([w1]
+   (swap! history conj (g/regular-win (latest) w1))
+   (latest))
+  ([w1 w2]
+   (swap! history conj (g/regular-win (latest) w1 w2))
+   (latest))
+  ([w1 w2 w3]
+   (swap! history conj (g/regular-win (latest) w1 w2 w3))
+   (latest)))
+
+(defn s-win
+  ([w1]
+   (swap! history conj (g/special-win (latest) w1))
+   (latest))
+  ([w1 w2]
+   (swap! history conj (g/special-win  (latest) w1 w2))
+   (latest))
+  ([w1 w2 w3]
+   (swap! history conj (g/special-win  (latest) w1 w2 w3))
+   (latest)))
+
+(defn l-win
+  ([w1]
+   (swap! history conj (g/llena-win (latest) w1))
+   (latest))
+  ([w1 w2]
+   (swap! history conj (g/llena-win (latest) w1 w2))
+   (latest))
+  ([w1 w2 w3]
+   (swap! history conj (g/llena-win (latest) w1 w2 w3))
+   (latest)))
 
 (defn diffs []
   (g/calculate-bank-differences (latest) (start)))
@@ -56,31 +65,43 @@
 (defn spot []
   (:special-pot (latest)))
 
-(r-win "Kristie")
-(s-win "Kristie")
-(r-win "Blanca")
-(r-win "Blanca")
-(r-win "Naidu")
-(s-win "Naidu" "Blanca")
-(r-win "Anna")
-(s-win "Anna")
-(r-win "Blanca")
-(r-win "Blanca")
-(r-win "Anna")
-(r-win "Guelita")
-(s-win "Stephanie")
-(r-win "Jenny")
-(r-win "Blanca")
-(r-win "Kristie")
-(r-win "Kristie")
-(s-win "Anna")
-(r-win "Anna")
-(r-win "Jenny")
-(s-win "Jenny" "Anna")
-(ch-cards "Guelito" 4)
-(r-win "Jenny")
-(r-win "Kristie")
-(r-win "Jenny")
-(r-win "Guelita")
-(r-win "Blanca")
-(s-win "Naidu")
+(defn srp []
+  (g/single-round-pot (latest)))
+
+;; (r-win "Stephanie")
+;; (r-win "Blanca")
+;; (r-win "Blanca")
+;; (r-win "Kristie" "Naidu")
+;; (s-win "Blanca")
+;; (r-win "Blanca" "Anna")
+;; (r-win "Stephanie")
+;; (r-win "Junior")
+;; (r-win "Guelita")
+;; (s-win "Blanca")
+;; (r-win "Anna" "Junior")
+;; (s-win "Anna")
+;; (r-win "Naidu")
+;; (r-win "Guelita")
+;; (s-win "Guelita")
+;; (r-win "Naidu")
+;; (r-win "Blanca")
+;; (r-win "Junior")
+;; (r-win "Stephanie")
+;; (s-win "Naidu")
+;; (r-win "Kristie")
+;; (r-win "Blanca")
+;; (r-win "Alfred")
+;; (r-win "Alfred")
+;; (s-win "Naidu")
+;; (l-win "Kristie")
+
+;; (r-win "Kristie")
+;; (l-win "Naidu" "Blanca")
+;; (r-win "Kristie")
+;; (s-win "Kristie")
+;; (r-win "Blanca")
+;; (r-win "Blanca")
+;; (r-win "Naidu")
+;; (r-win "Naidu" "Blanca")
+;; (s-win "Naidu" "Anna" "Stephanie")
+;; (l-win "Naidu" "Blanca" "Kristie")
