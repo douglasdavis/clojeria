@@ -116,10 +116,11 @@
          k2 (pkey w2)
          k3 (pkey w3)
          pot (/ (single-round-pot game) 3.0)]
-     (charge-all)
-     (give-winnings k1 pot :wins)
-     (give-winnings k2 pot :wins)
-     (give-winnings k3 pot :wins))))
+     (-> game
+         (charge-all)
+         (give-winnings k1 pot :wins)
+         (give-winnings k2 pot :wins)
+         (give-winnings k3 pot :wins)))))
 
 (defn special-win
   "Award special pot to a player."
