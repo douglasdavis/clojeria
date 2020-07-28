@@ -63,12 +63,21 @@
   (let [ctp (round-cost player)]
     (update player :bank - ctp)))
 
+(defn zero-cards
+  [player]
+  (assoc player :cards 0))
+
 (defn charge-all
   "Charge all players the amount they owe to play their cards."
   [game]
   (-> game
       (update :players apply-all-vals charge)
       (update :special-pot + (single-round-pot game))))
+
+(defn zero-all-cards
+  [game]
+  (-> game
+      (update :players apply-all-vals zero-cards)))
 
 (defn charge-llena
   "Charge a player by taking some money from their bank."
