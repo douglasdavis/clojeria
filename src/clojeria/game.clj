@@ -3,7 +3,7 @@
             [clojure.java.io :as io]
             [clojure.data.csv :as csv]))
 
-(defrecord Player [name cards bank wins sp-wins llena-wins])
+(defrecord Player [name bank cards wins sp-wins llena-wins])
 (def cost-per-card 0.25)
 
 (defn pkey
@@ -23,7 +23,7 @@
   "Add a player to game."
   ([existing pname cards bank]
    (let [k (pkey pname)]
-     (update existing :players conj {k (->Player pname cards bank 0 0)}))))
+     (update existing :players conj {k (->Player pname bank cards 0 0)}))))
 
 (defn change-cards
   "Update the cards of a player in the game."
@@ -184,7 +184,33 @@
          (give-winnings k2 pot :llena-wins)
          (give-winnings k3 pot :llena-wins)))))
 
-(defn- csv-data->maps [csv-data]
+(defn calculate-bank-differences
+  "Calculate the bank differences between two game maps."
+  [final initial]
+  (into
+   {}
+   (for [k (keys (:players final))]
+     [k (- (get-in final [:players k :bank])
+           (get-in initial [:players k :bank]))])))
+
+(defn- prep-banks-for-csv
+  [game]
+  (into
+   [["name" "bank"]]
+   (vec
+    (map
+     (fn [p] (assoc [(first p) (second p)] 0 (name (first p))))
+     (into [] (summary-of-column game :bank))))))
+
+(defn summary-of-column
+  [game c]
+  (into
+   {}
+   (for [k (keys (:players  game))]
+     [k (get-in game [:players k c])])))
+
+(defn- csv-data->maps
+  [csv-data]
   (map
    zipmap
    (->> (first csv-data)
@@ -192,15 +218,14 @@
         repeat)
    (rest csv-data)))
 
-(defn- players-from-csv [csv-file]
+(defn- players-from-csv
+  [csv-file]
   (with-open [reader (io/reader csv-file)]
     (doall
      (->> (csv/read-csv reader)
           csv-data->maps
-          (map (fn [rec]
-                 (-> rec
-                     (update :cards #(Long/parseLong %))
-                     (update :bank #(Float/parseFloat %)))))))))
+          (map
+           (fn [rec] (update rec :bank #(Float/parseFloat %))))))))
 
 (defn init-from-csv
   "Initialize a game from a CSV file."
@@ -211,24 +236,15 @@
     (for [entry (players-from-csv csv-file)]
       [(pkey (:name entry))
        {:name (:name entry)
-        :cards (:cards entry)
         :bank (:bank entry)
+        :cards 0
         :wins 0
         :sp-wins 0
         :llena-wins 0}]))))
 
-(defn calculate-bank-differences
-  "Calculate the bank differences between two game maps."
-  [final initial]
-  (into
-   {}
-   (for [k (keys (:players final))]
-     [k (- (get-in final [:players k :bank])
-           (get-in initial [:players k :bank]))])))
-
-(defn summary-of-column
-  [game c]
-  (into
-   {}
-   (for [k (keys (:players  game))]
-     [k (get-in game [:players k c])])))
+(defn banks-to-csv
+  "Save banks fro GAME to FNAME as CSV file."
+  [game fname]
+  (with-open [writer (io/writer fname)]
+    (csv/write-csv writer
+                   (prep-banks-for-csv game))))
