@@ -193,6 +193,13 @@
      [k (- (get-in final [:players k :bank])
            (get-in initial [:players k :bank]))])))
 
+(defn summary-of-column
+  [game c]
+  (into
+   {}
+   (for [k (keys (:players  game))]
+     [k (get-in game [:players k c])])))
+
 (defn- prep-banks-for-csv
   [game]
   (into
@@ -201,13 +208,6 @@
     (map
      (fn [p] (assoc [(first p) (second p)] 0 (name (first p))))
      (into [] (summary-of-column game :bank))))))
-
-(defn summary-of-column
-  [game c]
-  (into
-   {}
-   (for [k (keys (:players  game))]
-     [k (get-in game [:players k c])])))
 
 (defn- csv-data->maps
   [csv-data]

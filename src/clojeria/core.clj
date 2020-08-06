@@ -4,7 +4,7 @@
 
 (def history (atom []))
 
-(swap! history conj (g/init-from-csv "/Users/ddavis/Dropbox/kdshare/Loteria/Loteria_Accounts_06302020.csv"))
+(swap! history conj (g/init-from-csv "resources/2020.08.05.csv"))
 
 (defn latest []
   (last @history))
@@ -75,50 +75,14 @@
 (defn save-banks []
   (let [date-s (.format (java.text.SimpleDateFormat. "yyyy.MM.dd") (new java.util.Date))
         file-s (str "resources/" date-s ".csv")]
-    (g/to-csv (latest) file-s)))
+    (g/banks-to-csv (latest) file-s)))
 
 (zero-cards)
 
 (ch-cards "Blanca" 4)
+(ch-cards "Naidu" 4)
 (ch-cards "Alfred" 4)
+(ch-cards "Guelita" 4)
 (ch-cards "Anna" 4)
 (ch-cards "Stephanie" 4)
-(ch-cards "Junior" 4)
-(ch-cards "Naidu" 4)
-(ch-cards "Guelita" 4)
-
-(rg-win "Blanca")
-(rg-win "Junior")
-(rg-win "Blanca")
-(sp-win "Blanca")
-(rg-win "Alfred")
-(rg-win "Stephanie")
-(rg-win "Stephanie")
-(rg-win "Naidu")
-(sp-win "Anna")
-(rg-win "Junior")
-(rg-win "Junior" "Naidu")
-(rg-win "Stephanie" "Junior")
-(rg-win "Stephanie")
-(sp-win "Naidu")
-(rg-win "Naidu")
-(rg-win "Naidu")
-(sp-win "Naidu")
-(rg-win "Naidu")
-(sp-win "Naidu")
-(rg-win "Junior")
-(sp-win "Junior")
-(rg-win "Anna")
-(rg-win "Guelita" "Alfred")
-(rg-win "Stephanie")
-(rg-win "Blanca")
-(sp-win "Guelita")
-(rg-win "Alfred")
-(sp-win "Alfred")
-(rg-win "Anna")
-(rg-win "Naidu")
-(rg-win "Junior")
-(sp-win "Junior")
-(ll-win "Alfred" "Guelita")
-
-(save-banks)
+(ch-cards "Alma" 4)
