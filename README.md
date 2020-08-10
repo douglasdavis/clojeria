@@ -1,6 +1,8 @@
 # clojeria
 
-A Clojure application to play [Lotería](https://en.wikipedia.org/wiki/Loter%C3%ADa).
+A Clojure application to handle the banking for geographically
+distributed (AKA video chat based)
+[Lotería](https://en.wikipedia.org/wiki/Loter%C3%ADa) games.
 
 ## Installation
 
