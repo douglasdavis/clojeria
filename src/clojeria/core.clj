@@ -4,7 +4,7 @@
 
 (def history (atom []))
 
-(swap! history conj (g/init-from-csv "resources/2020.08.08.csv"))
+(swap! history conj (g/init-from-csv "resources/2020.08.09.csv"))
 
 (defn latest []
   (last @history))
@@ -83,5 +83,6 @@
 (ch-cards "Anna" 4)
 (ch-cards "Blanca" 4)
 (ch-cards "Kristie" 2)
-(ch-cards "Juan" 6)
-(ch-cards "Alfred" 4)
+(ch-cards "Junior" 4)
+(ch-cards "Juan" 4)
+(ch-cards "Naidu" 4)
