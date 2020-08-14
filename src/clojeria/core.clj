@@ -81,9 +81,9 @@
 
 (ch-cards "Blanca" 4)
 (ch-cards "Anna" 4)
-(ch-cards "Stephanie" 4)
-(ch-cards "Junior" 4)
 (ch-cards "Guelita" 4)
+(ch-cards "Guelito" 4)
+(ch-cards "Kristie" 4)
 (ch-cards "Naidu" 4)
-(ch-cards "Kristie" 2)
-(ch-cards "Alfred" 4)
+(ch-cards "Junior" 4)
+(ch-cards "Jenny" 4)
