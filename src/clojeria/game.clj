@@ -6,7 +6,7 @@
 (defrecord Player [name bank cards wins sp-wins llena-wins])
 (def cost-per-card 0.25)
 
-(defn pkey
+(defn- pkey
   "Convert an arbitrary player identifier (input can be string or
   keyword) as a purely lower-case keyword."
   [p]
