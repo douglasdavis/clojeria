@@ -4,7 +4,7 @@
 
 (def history (atom []))
 
-(swap! history conj (g/init-from-csv "resources/2020.08.20.csv"))
+(swap! history conj (g/init-from-csv "resources/2020.08.21.csv"))
 
 (defn latest []
   (last @history))
@@ -77,7 +77,7 @@
   []
   (g/summary-of-column (latest) :cards))
 
-(defn special-pot
+(defn spot
   "Show current special pot value"
   []
   (:special-pot (latest)))
@@ -98,9 +98,6 @@
 
 (ch-cards "Blanca" 4)
 (ch-cards "Guelita" 4)
-(ch-cards "Guelito" 4)
 (ch-cards "Junior" 4)
-(ch-cards "Alfred" 4)
-(ch-cards "Naidu" 4)
 (ch-cards "Anna" 4)
 (ch-cards "Stephanie" 4)
