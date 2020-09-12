@@ -104,6 +104,13 @@
         (update-in [:players k :bank] + pot)
         (update-in [:players k wtype] inc))))
 
+(defn- reg-win-opt-args [game & args]
+  (let [total-pot (single-round-pot game)
+        indiv-pot (/ total-pot (count args))
+        charged (charge-all game)]
+    (for [p args]
+      (give-winnings charged p indiv-pot :wins))))
+
 (defn regular-win
   "Award the WINNER(S) in GAME with a regular round prize."
   ([game w1]
